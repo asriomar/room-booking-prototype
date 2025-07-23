@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -339,6 +338,9 @@
         // Current view
         let currentView = 'user'; // 'user' or 'admin'
 
+        // Current date range
+        let currentDateRangeStart = new Date();
+
         // DOM Elements
         const userViewContent = document.getElementById('user-view-content');
         const adminViewContent = document.getElementById('admin-view-content');
@@ -366,13 +368,12 @@
 
         // Render dates dynamically
         function renderDates() {
-            const today = new Date();
             const dates = [];
             
-            // Generate next 5 days
+            // Generate next 5 days from current start date
             for (let i = 0; i < 5; i++) {
-                const date = new Date(today);
-                date.setDate(today.getDate() + i);
+                const date = new Date(currentDateRangeStart);
+                date.setDate(currentDateRangeStart.getDate() + i);
                 dates.push(date);
             }
 
@@ -391,6 +392,11 @@
                 tab.addEventListener('click', () => selectDate(tab));
                 dateTabs.appendChild(tab);
             });
+            
+            // Set current booking date to first date
+            if (dates.length > 0) {
+                currentBooking.date = formatDateForComparison(dates[0]);
+            }
         }
 
         // Select a date
@@ -679,13 +685,15 @@
 
             // Date navigation buttons
             document.getElementById('prev-date').addEventListener('click', function() {
-                // In a real app, this would change the date range
-                console.log("Previous date clicked");
+                currentDateRangeStart.setDate(currentDateRangeStart.getDate() - 5);
+                renderDates();
+                renderRooms();
             });
 
             document.getElementById('next-date').addEventListener('click', function() {
-                // In a real app, this would change the date range
-                console.log("Next date clicked");
+                currentDateRangeStart.setDate(currentDateRangeStart.getDate() + 5);
+                renderDates();
+                renderRooms();
             });
 
             // View switching
@@ -776,7 +784,7 @@
 
         // Update booking summary panel
         function updateBookingSummary() {
-            if (currentBooking.roomId) {
+            if (currentBooking.roomId && currentBooking.date) {
                 emptySummary.classList.add('hidden');
                 bookingDetails.classList.remove('hidden');
                 
@@ -791,7 +799,13 @@
 
         // Request booking
         function requestBooking() {
-            if (!currentBooking.roomId || !currentBooking.date) return;
+            if (!currentBooking.roomId || !currentBooking.date || !currentBooking.timeSlot) return;
+
+            // Check if this time slot is already booked
+            if (isTimeSlotBooked(currentBooking.roomId, currentBooking.timeSlot, currentBooking.date)) {
+                alert("This time slot is already booked!");
+                return;
+            }
 
             // Create new booking request
             const newBooking = {
@@ -813,13 +827,16 @@
             showConfirmationModal();
             renderRooms(); // Re-render to update booked slots
             renderBookings();
-            renderAdminBookings();
-            updateAdminStats();
+            
+            if (currentView === 'admin') {
+                renderAdminBookings();
+                updateAdminStats();
+            }
         }
 
         // Show confirmation modal
         function showConfirmationModal() {
-            if (currentBooking.roomId) {
+            if (currentBooking.roomId && currentBooking.date) {
                 document.getElementById('modal-room-name').textContent = currentBooking.roomName;
                 document.getElementById('modal-date').textContent = formatDisplayDate(currentBooking.date);
                 document.getElementById('modal-time').textContent = currentBooking.timeSlot;
@@ -832,11 +849,14 @@
         function cancelBookingRequest(bookingId) {
             if (confirm('Are you sure you want to cancel this booking request?')) {
                 const booking = bookings.find(b => b.id === bookingId);
-                if (booking && booking.status === "pending") {
+                if (booking && booking.status === "pending" && booking.userName === "Current User") {
                     booking.status = "cancelled";
                     renderBookings();
-                    renderAdminBookings();
-                    updateAdminStats();
+                    if (currentView === 'admin') {
+                        renderAdminBookings();
+                        updateAdminStats();
+                    }
+                    renderRooms(); // Update room availability
                 }
             }
         }
