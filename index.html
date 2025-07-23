@@ -1,0 +1,901 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Room Booking App - Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3b82f6',
+                        secondary: '#1e40af',
+                        accent: '#f97316',
+                        light: '#f8fafc',
+                        dark: '#0f172a',
+                        success: '#10b981',
+                        warning: '#f59e0b',
+                        danger: '#ef4444'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <header class="mb-8">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-3xl font-bold text-primary">Room Booking System</h1>
+                    <p class="text-gray-600">Manage your room bookings efficiently</p>
+                </div>
+                <div class="flex space-x-4">
+                    <button id="user-view-btn" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">
+                        <i class="fas fa-user mr-2"></i>User View
+                    </button>
+                    <button id="admin-view-btn" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-secondary">
+                        <i class="fas fa-user-shield mr-2"></i>Admin View
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- User View -->
+        <div id="user-view-content">
+            <!-- Main Content -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Room Selection Panel -->
+                <div class="lg:col-span-2 bg-white rounded-xl shadow-lg p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold text-gray-800">Available Rooms</h2>
+                        <div class="flex space-x-2">
+                            <button id="prev-date" class="p-2 rounded-full hover:bg-gray-100">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <button id="next-date" class="p-2 rounded-full hover:bg-gray-100">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Date Navigation -->
+                    <div class="flex overflow-x-auto mb-6 pb-2 space-x-4" id="date-tabs">
+                        <!-- Dates will be dynamically inserted here -->
+                    </div>
+
+                    <!-- Room List -->
+                    <div class="space-y-4" id="room-list">
+                        <!-- Room items will be dynamically inserted here -->
+                    </div>
+                </div>
+
+                <!-- Booking Summary Panel -->
+                <div class="bg-white rounded-xl shadow-lg p-6 h-fit sticky top-8">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">Booking Summary</h2>
+                    
+                    <div id="booking-summary" class="space-y-4">
+                        <div class="text-center py-8 text-gray-500" id="empty-summary">
+                            <i class="fas fa-calendar-plus text-4xl mb-3"></i>
+                            <p>Select a room and time slot to book</p>
+                        </div>
+                        
+                        <div id="booking-details" class="hidden">
+                            <div class="border-b pb-4 mb-4">
+                                <h3 class="font-bold text-lg mb-2" id="summary-room-name">Conference Room A</h3>
+                                <div class="flex items-center text-gray-600 mb-1">
+                                    <i class="fas fa-calendar-alt mr-2"></i>
+                                    <span id="summary-date">June 15, 2023</span>
+                                </div>
+                                <div class="flex items-center text-gray-600">
+                                    <i class="fas fa-clock mr-2"></i>
+                                    <span id="summary-time">10:00 AM - 11:00 AM</span>
+                                </div>
+                            </div>
+                            
+                            <div class="border-b pb-4 mb-4">
+                                <div class="flex justify-between mb-2">
+                                    <span class="text-gray-600">Room Rate</span>
+                                    <span id="room-rate">$50.00</span>
+                                </div>
+                                <div class="flex justify-between mb-2">
+                                    <span class="text-gray-600">Duration</span>
+                                    <span id="duration">1 hour</span>
+                                </div>
+                                <div class="flex justify-between font-bold text-lg mt-3">
+                                    <span>Total</span>
+                                    <span id="total-amount">$50.00</span>
+                                </div>
+                            </div>
+                            
+                            <button id="confirm-booking" class="w-full bg-primary hover:bg-secondary text-white font-bold py-3 rounded-lg transition duration-300">
+                                Request Booking
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- My Bookings Section -->
+            <div class="mt-12 bg-white rounded-xl shadow-lg p-6">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">My Bookings</h2>
+                <div id="bookings-list" class="space-y-4">
+                    <div class="text-center py-8 text-gray-500" id="no-bookings">
+                        <i class="fas fa-calendar-check text-4xl mb-3"></i>
+                        <p>You have no bookings yet</p>
+                    </div>
+                    <!-- Bookings will be dynamically inserted here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Admin View -->
+        <div id="admin-view-content" class="hidden">
+            <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800">Admin Dashboard</h2>
+                    <div class="flex space-x-2">
+                        <button id="refresh-bookings" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">
+                            <i class="fas fa-sync-alt mr-2"></i>Refresh
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Booking Stats -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                    <div class="bg-blue-50 p-4 rounded-lg">
+                        <div class="text-2xl font-bold text-primary" id="total-bookings">0</div>
+                        <div class="text-gray-600">Total Bookings</div>
+                    </div>
+                    <div class="bg-yellow-50 p-4 rounded-lg">
+                        <div class="text-2xl font-bold text-warning" id="pending-bookings">0</div>
+                        <div class="text-gray-600">Pending</div>
+                    </div>
+                    <div class="bg-green-50 p-4 rounded-lg">
+                        <div class="text-2xl font-bold text-success" id="approved-bookings">0</div>
+                        <div class="text-gray-600">Approved</div>
+                    </div>
+                    <div class="bg-red-50 p-4 rounded-lg">
+                        <div class="text-2xl font-bold text-danger" id="cancelled-bookings">0</div>
+                        <div class="text-gray-600">Cancelled</div>
+                    </div>
+                </div>
+
+                <!-- Bookings Management -->
+                <h3 class="text-xl font-bold mb-4">Manage Bookings</h3>
+                <div id="admin-bookings-list" class="space-y-4">
+                    <div class="text-center py-8 text-gray-500" id="no-admin-bookings">
+                        <i class="fas fa-calendar-check text-4xl mb-3"></i>
+                        <p>No bookings to manage</p>
+                    </div>
+                    <!-- Admin bookings will be dynamically inserted here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Modals -->
+        <!-- Booking Confirmation Modal -->
+        <div id="confirmation-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+            <div class="bg-white rounded-xl p-8 max-w-md w-full mx-4">
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-check text-green-500 text-2xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-2">Booking Requested!</h3>
+                    <p class="text-gray-600 mb-6">Your booking request has been submitted and is pending approval.</p>
+                    
+                    <div class="bg-gray-50 rounded-lg p-4 mb-6 text-left">
+                        <div class="flex justify-between mb-2">
+                            <span class="text-gray-600">Room:</span>
+                            <span class="font-medium" id="modal-room-name">Conference Room A</span>
+                        </div>
+                        <div class="flex justify-between mb-2">
+                            <span class="text-gray-600">Date:</span>
+                            <span class="font-medium" id="modal-date">June 15, 2023</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Time:</span>
+                            <span class="font-medium" id="modal-time">10:00 AM - 11:00 AM</span>
+                        </div>
+                    </div>
+                    
+                    <button id="close-modal" class="w-full bg-primary hover:bg-secondary text-white font-bold py-3 rounded-lg transition duration-300">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Admin Action Confirmation Modal -->
+        <div id="admin-action-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+            <div class="bg-white rounded-xl p-8 max-w-md w-full mx-4">
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-exclamation-circle text-blue-500 text-2xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-2" id="admin-action-title">Confirm Action</h3>
+                    <p class="text-gray-600 mb-6" id="admin-action-message">Are you sure you want to perform this action?</p>
+                    
+                    <div class="flex space-x-4">
+                        <button id="admin-action-cancel" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 rounded-lg transition duration-300">
+                            Cancel
+                        </button>
+                        <button id="admin-action-confirm" class="flex-1 bg-primary hover:bg-secondary text-white font-bold py-3 rounded-lg transition duration-300">
+                            Confirm
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Sample room data
+        const rooms = [
+            {
+                id: 1,
+                name: "Conference Room A",
+                capacity: 12,
+                amenities: ["Projector", "Whiteboard", "WiFi"],
+                price: 50,
+                image: "https://placehold.co/400x200/3b82f6/white?text=Conference+A"
+            },
+            {
+                id: 2,
+                name: "Executive Suite",
+                capacity: 6,
+                amenities: ["Video Conferencing", "Coffee Station", "WiFi"],
+                price: 80,
+                image: "https://placehold.co/400x200/1e40af/white?text=Executive+Suite"
+            },
+            {
+                id: 3,
+                name: "Training Room",
+                capacity: 20,
+                amenities: ["Smart Board", "Sound System", "WiFi"],
+                price: 70,
+                image: "https://placehold.co/400x200/f97316/white?text=Training+Room"
+            },
+            {
+                id: 4,
+                name: "Meeting Pod",
+                capacity: 4,
+                amenities: ["Phone Booth", "Power Outlets", "WiFi"],
+                price: 30,
+                image: "https://placehold.co/400x200/0f172a/white?text=Meeting+Pod"
+            }
+        ];
+
+        // Time slots for booking
+        const timeSlots = [
+            "08:00 AM - 09:00 AM",
+            "09:00 AM - 10:00 AM",
+            "10:00 AM - 11:00 AM",
+            "11:00 AM - 12:00 PM",
+            "12:00 PM - 01:00 PM",
+            "01:00 PM - 02:00 PM",
+            "02:00 PM - 03:00 PM",
+            "03:00 PM - 04:00 PM",
+            "04:00 PM - 05:00 PM"
+        ];
+
+        // Current booking state
+        let currentBooking = {
+            roomId: null,
+            roomName: null,
+            date: null,
+            timeSlot: null,
+            price: 0
+        };
+
+        // Bookings storage
+        let bookings = [
+            {
+                id: 1,
+                roomId: 1,
+                roomName: "Conference Room A",
+                date: "2023-06-15",
+                timeSlot: "10:00 AM - 11:00 AM",
+                price: 50,
+                bookingDate: "2023-06-10",
+                status: "approved", // pending, approved, cancelled
+                userName: "John Doe"
+            },
+            {
+                id: 2,
+                roomId: 3,
+                roomName: "Training Room",
+                date: "2023-06-16",
+                timeSlot: "02:00 PM - 03:00 PM",
+                price: 70,
+                bookingDate: "2023-06-12",
+                status: "pending",
+                userName: "Jane Smith"
+            },
+            {
+                id: 3,
+                roomId: 2,
+                roomName: "Executive Suite",
+                date: "2023-06-17",
+                timeSlot: "11:00 AM - 12:00 PM",
+                price: 80,
+                bookingDate: "2023-06-14",
+                status: "cancelled",
+                userName: "Bob Johnson"
+            }
+        ];
+
+        // Current admin action
+        let currentAdminAction = {
+            bookingId: null,
+            action: null
+        };
+
+        // Current view
+        let currentView = 'user'; // 'user' or 'admin'
+
+        // DOM Elements
+        const userViewContent = document.getElementById('user-view-content');
+        const adminViewContent = document.getElementById('admin-view-content');
+        const roomList = document.getElementById('room-list');
+        const bookingSummary = document.getElementById('booking-summary');
+        const emptySummary = document.getElementById('empty-summary');
+        const bookingDetails = document.getElementById('booking-details');
+        const confirmationModal = document.getElementById('confirmation-modal');
+        const adminActionModal = document.getElementById('admin-action-modal');
+        const bookingsList = document.getElementById('bookings-list');
+        const adminBookingsList = document.getElementById('admin-bookings-list');
+        const noBookings = document.getElementById('no-bookings');
+        const noAdminBookings = document.getElementById('no-admin-bookings');
+        const dateTabs = document.getElementById('date-tabs');
+
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', function() {
+            renderDates();
+            renderRooms();
+            renderBookings();
+            renderAdminBookings();
+            updateAdminStats();
+            setupEventListeners();
+        });
+
+        // Render dates dynamically
+        function renderDates() {
+            const today = new Date();
+            const dates = [];
+            
+            // Generate next 5 days
+            for (let i = 0; i < 5; i++) {
+                const date = new Date(today);
+                date.setDate(today.getDate() + i);
+                dates.push(date);
+            }
+
+            dateTabs.innerHTML = '';
+            dates.forEach((date, index) => {
+                const dayName = getDayName(date);
+                const formattedDate = formatDate(date);
+
+                const tab = document.createElement('div');
+                tab.className = `flex-shrink-0 text-center cursor-pointer date-tab ${index === 0 ? 'active bg-primary text-white' : ''} rounded-lg p-3 min-w-[100px]`;
+                tab.innerHTML = `
+                    <div class="font-semibold">${dayName}</div>
+                    <div class="text-sm">${formattedDate}</div>
+                `;
+                tab.dataset.date = formatDateForComparison(date); // Store date for reference
+                tab.addEventListener('click', () => selectDate(tab));
+                dateTabs.appendChild(tab);
+            });
+        }
+
+        // Select a date
+        function selectDate(tab) {
+            // Remove active class from all tabs
+            document.querySelectorAll('.date-tab').forEach(t => t.classList.remove('active', 'bg-primary', 'text-white'));
+            
+            // Add active class to selected tab
+            tab.classList.add('active', 'bg-primary', 'text-white');
+            
+            // Update current date
+            const selectedDate = tab.dataset.date;
+            currentBooking.date = selectedDate;
+
+            // Re-render rooms with updated availability
+            renderRooms();
+        }
+
+        // Get day name (e.g., "Today", "Fri")
+        function getDayName(date) {
+            const options = { weekday: 'short' };
+            if (isSameDay(date, new Date())) return "Today";
+            return date.toLocaleDateString(undefined, options);
+        }
+
+        // Format date as "Jun 15"
+        function formatDate(date) {
+            const options = { month: 'short', day: 'numeric' };
+            return date.toLocaleDateString(undefined, options);
+        }
+
+        // Format date for comparison (YYYY-MM-DD)
+        function formatDateForComparison(date) {
+            return date.toISOString().split('T')[0];
+        }
+
+        // Check if two dates are the same
+        function isSameDay(a, b) {
+            return (
+                a.getFullYear() === b.getFullYear() &&
+                a.getMonth() === b.getMonth() &&
+                a.getDate() === b.getDate()
+            );
+        }
+
+        // Render rooms to the UI
+        function renderRooms() {
+            roomList.innerHTML = '';
+            
+            rooms.forEach(room => {
+                const roomElement = document.createElement('div');
+                roomElement.className = 'border rounded-xl overflow-hidden hover:shadow-md transition-shadow duration-300';
+                roomElement.innerHTML = `
+                    <img src="${room.image}" alt="${room.name}" class="w-full h-48 object-cover">
+                    <div class="p-5">
+                        <div class="flex justify-between items-start mb-3">
+                            <h3 class="text-xl font-bold">${room.name}</h3>
+                            <span class="bg-primary text-white text-sm font-bold px-3 py-1 rounded-full">$${room.price}/hr</span>
+                        </div>
+                        
+                        <div class="flex items-center text-gray-600 mb-3">
+                            <i class="fas fa-users mr-2"></i>
+                            <span>${room.capacity} people</span>
+                        </div>
+                        
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            ${room.amenities.map(amenity => `
+                                <span class="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">${amenity}</span>
+                            `).join('')}
+                        </div>
+                        
+                        <div class="border-t pt-4">
+                            <h4 class="font-semibold mb-2">Available Times</h4>
+                            <div class="grid grid-cols-3 gap-2">
+                                ${timeSlots.map((slot, index) => {
+                                    // Check if this time slot is already booked
+                                    const isBooked = isTimeSlotBooked(room.id, slot, currentBooking.date);
+                                    const buttonClass = isBooked 
+                                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                                        : 'time-slot text-xs py-2 px-1 border rounded hover:bg-primary hover:text-white transition-colors duration-200';
+                                    
+                                    return `
+                                        <button 
+                                            class="${buttonClass}"
+                                            data-room-id="${room.id}"
+                                            data-room-name="${room.name}"
+                                            data-price="${room.price}"
+                                            data-time-slot="${slot}"
+                                            ${isBooked ? 'disabled' : ''}
+                                        >
+                                            ${slot}
+                                        </button>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                roomList.appendChild(roomElement);
+            });
+        }
+
+        // Check if a time slot is already booked
+        function isTimeSlotBooked(roomId, timeSlot, date) {
+            return bookings.some(booking => 
+                booking.roomId === roomId && 
+                booking.timeSlot === timeSlot && 
+                booking.date === date &&
+                booking.status === "approved"
+            );
+        }
+
+        // Render user bookings to the UI
+        function renderBookings() {
+            const userBookings = bookings.filter(booking => booking.userName === "Current User");
+            
+            if (userBookings.length === 0) {
+                noBookings.classList.remove('hidden');
+                bookingsList.innerHTML = '';
+                return;
+            }
+
+            noBookings.classList.add('hidden');
+            bookingsList.innerHTML = '';
+
+            // Sort bookings by date
+            const sortedBookings = [...userBookings].sort((a, b) => 
+                new Date(a.date) - new Date(b.date)
+            );
+
+            sortedBookings.forEach(booking => {
+                const statusClass = getStatusClass(booking.status);
+                const statusText = getStatusText(booking.status);
+                
+                const bookingElement = document.createElement('div');
+                bookingElement.className = 'border rounded-lg p-4 flex justify-between items-center';
+                bookingElement.innerHTML = `
+                    <div>
+                        <h3 class="font-bold text-lg">${booking.roomName}</h3>
+                        <div class="flex items-center text-gray-600 mt-1">
+                            <i class="fas fa-calendar-alt mr-2"></i>
+                            <span>${formatDisplayDate(booking.date)}</span>
+                        </div>
+                        <div class="flex items-center text-gray-600 mt-1">
+                            <i class="fas fa-clock mr-2"></i>
+                            <span>${booking.timeSlot}</span>
+                        </div>
+                        <div class="flex items-center mt-2">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusClass}">
+                                ${statusText}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="font-bold text-lg">$${booking.price}</div>
+                        ${booking.status === "pending" ? `
+                            <button class="cancel-booking mt-2 text-red-500 hover:text-red-700 text-sm" data-booking-id="${booking.id}">
+                                Cancel Request
+                            </button>
+                        ` : ''}
+                    </div>
+                `;
+                bookingsList.appendChild(bookingElement);
+            });
+        }
+
+        // Render admin bookings to the UI
+        function renderAdminBookings() {
+            if (bookings.length === 0) {
+                noAdminBookings.classList.remove('hidden');
+                adminBookingsList.innerHTML = '';
+                return;
+            }
+
+            noAdminBookings.classList.add('hidden');
+            adminBookingsList.innerHTML = '';
+
+            // Sort bookings by date
+            const sortedBookings = [...bookings].sort((a, b) => 
+                new Date(a.date) - new Date(b.date)
+            );
+
+            sortedBookings.forEach(booking => {
+                const statusClass = getStatusClass(booking.status);
+                const statusText = getStatusText(booking.status);
+                
+                const bookingElement = document.createElement('div');
+                bookingElement.className = 'border rounded-lg p-4';
+                bookingElement.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h3 class="font-bold text-lg">${booking.roomName}</h3>
+                            <div class="flex items-center text-gray-600 mt-1">
+                                <i class="fas fa-user mr-2"></i>
+                                <span>${booking.userName}</span>
+                            </div>
+                            <div class="flex items-center text-gray-600 mt-1">
+                                <i class="fas fa-calendar-alt mr-2"></i>
+                                <span>${formatDisplayDate(booking.date)}</span>
+                            </div>
+                            <div class="flex items-center text-gray-600 mt-1">
+                                <i class="fas fa-clock mr-2"></i>
+                                <span>${booking.timeSlot}</span>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="font-bold text-lg">$${booking.price}</div>
+                            <div class="mt-2">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusClass}">
+                                    ${statusText}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-end space-x-2 mt-4">
+                        ${booking.status === "pending" ? `
+                            <button class="admin-approve px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 text-sm" data-booking-id="${booking.id}">
+                                Approve
+                            </button>
+                            <button class="admin-cancel px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-sm" data-booking-id="${booking.id}">
+                                Cancel
+                            </button>
+                        ` : booking.status === "approved" ? `
+                            <button class="admin-cancel px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-sm" data-booking-id="${booking.id}">
+                                Cancel Booking
+                            </button>
+                        ` : ''}
+                    </div>
+                `;
+                adminBookingsList.appendChild(bookingElement);
+            });
+        }
+
+        // Update admin stats
+        function updateAdminStats() {
+            const total = bookings.length;
+            const pending = bookings.filter(b => b.status === "pending").length;
+            const approved = bookings.filter(b => b.status === "approved").length;
+            const cancelled = bookings.filter(b => b.status === "cancelled").length;
+            
+            document.getElementById('total-bookings').textContent = total;
+            document.getElementById('pending-bookings').textContent = pending;
+            document.getElementById('approved-bookings').textContent = approved;
+            document.getElementById('cancelled-bookings').textContent = cancelled;
+        }
+
+        // Get status class for styling
+        function getStatusClass(status) {
+            switch(status) {
+                case "pending": return "bg-yellow-100 text-yellow-800";
+                case "approved": return "bg-green-100 text-green-800";
+                case "cancelled": return "bg-red-100 text-red-800";
+                default: return "bg-gray-100 text-gray-800";
+            }
+        }
+
+        // Get status text
+        function getStatusText(status) {
+            switch(status) {
+                case "pending": return "Pending Approval";
+                case "approved": return "Approved";
+                case "cancelled": return "Cancelled";
+                default: return status;
+            }
+        }
+
+        // Format date for display
+        function formatDisplayDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+        }
+
+        // Set up event listeners
+        function setupEventListeners() {
+            // Time slot selection
+            document.addEventListener('click', function(e) {
+                if (e.target.classList.contains('time-slot')) {
+                    selectTimeSlot(e.target);
+                }
+            });
+
+            // Date navigation buttons
+            document.getElementById('prev-date').addEventListener('click', function() {
+                // In a real app, this would change the date range
+                console.log("Previous date clicked");
+            });
+
+            document.getElementById('next-date').addEventListener('click', function() {
+                // In a real app, this would change the date range
+                console.log("Next date clicked");
+            });
+
+            // View switching
+            document.getElementById('user-view-btn').addEventListener('click', function() {
+                currentView = 'user';
+                userViewContent.classList.remove('hidden');
+                adminViewContent.classList.add('hidden');
+                document.getElementById('user-view-btn').classList.add('bg-gray-200');
+                document.getElementById('admin-view-btn').classList.remove('bg-primary', 'text-white');
+            });
+
+            document.getElementById('admin-view-btn').addEventListener('click', function() {
+                currentView = 'admin';
+                userViewContent.classList.add('hidden');
+                adminViewContent.classList.remove('hidden');
+                document.getElementById('admin-view-btn').classList.add('bg-primary', 'text-white');
+                document.getElementById('user-view-btn').classList.remove('bg-gray-200');
+            });
+
+            // Refresh bookings
+            document.getElementById('refresh-bookings').addEventListener('click', function() {
+                renderAdminBookings();
+                updateAdminStats();
+            });
+
+            // Confirm booking button
+            document.getElementById('confirm-booking').addEventListener('click', function() {
+                requestBooking();
+            });
+
+            // Close modal button
+            document.getElementById('close-modal').addEventListener('click', function() {
+                confirmationModal.classList.add('hidden');
+                resetBooking();
+            });
+
+            // Admin action modal buttons
+            document.getElementById('admin-action-cancel').addEventListener('click', function() {
+                adminActionModal.classList.add('hidden');
+                currentAdminAction = { bookingId: null, action: null };
+            });
+
+            document.getElementById('admin-action-confirm').addEventListener('click', function() {
+                performAdminAction();
+            });
+
+            // Cancel booking buttons
+            document.addEventListener('click', function(e) {
+                if (e.target.classList.contains('cancel-booking')) {
+                    const bookingId = parseInt(e.target.dataset.bookingId);
+                    cancelBookingRequest(bookingId);
+                }
+            });
+
+            // Admin approve/cancel buttons
+            document.addEventListener('click', function(e) {
+                if (e.target.classList.contains('admin-approve')) {
+                    const bookingId = parseInt(e.target.dataset.bookingId);
+                    showAdminActionModal(bookingId, 'approve', 'Approve Booking', 'Are you sure you want to approve this booking?');
+                }
+                
+                if (e.target.classList.contains('admin-cancel')) {
+                    const bookingId = parseInt(e.target.dataset.bookingId);
+                    showAdminActionModal(bookingId, 'cancel', 'Cancel Booking', 'Are you sure you want to cancel this booking?');
+                }
+            });
+        }
+
+        // Handle time slot selection
+        function selectTimeSlot(element) {
+            // Remove active class from all time slots
+            document.querySelectorAll('.time-slot').forEach(slot => {
+                slot.classList.remove('bg-primary', 'text-white');
+            });
+            
+            // Add active class to selected slot
+            element.classList.add('bg-primary', 'text-white');
+            
+            // Update booking state
+            currentBooking.roomId = parseInt(element.dataset.roomId);
+            currentBooking.roomName = element.dataset.roomName;
+            currentBooking.timeSlot = element.dataset.timeSlot;
+            currentBooking.price = parseInt(element.dataset.price);
+            
+            // Update booking summary
+            updateBookingSummary();
+        }
+
+        // Update booking summary panel
+        function updateBookingSummary() {
+            if (currentBooking.roomId) {
+                emptySummary.classList.add('hidden');
+                bookingDetails.classList.remove('hidden');
+                
+                document.getElementById('summary-room-name').textContent = currentBooking.roomName;
+                document.getElementById('summary-date').textContent = formatDisplayDate(currentBooking.date);
+                document.getElementById('summary-time').textContent = currentBooking.timeSlot;
+                document.getElementById('room-rate').textContent = `$${currentBooking.price}.00`;
+                document.getElementById('duration').textContent = "1 hour";
+                document.getElementById('total-amount').textContent = `$${currentBooking.price}.00`;
+            }
+        }
+
+        // Request booking
+        function requestBooking() {
+            if (!currentBooking.roomId || !currentBooking.date) return;
+
+            // Create new booking request
+            const newBooking = {
+                id: Date.now(), // Simple ID generation
+                roomId: currentBooking.roomId,
+                roomName: currentBooking.roomName,
+                date: currentBooking.date,
+                timeSlot: currentBooking.timeSlot,
+                price: currentBooking.price,
+                bookingDate: new Date().toISOString().split('T')[0],
+                status: "pending",
+                userName: "Current User"
+            };
+
+            // Add to bookings
+            bookings.push(newBooking);
+
+            // Update UI
+            showConfirmationModal();
+            renderRooms(); // Re-render to update booked slots
+            renderBookings();
+            renderAdminBookings();
+            updateAdminStats();
+        }
+
+        // Show confirmation modal
+        function showConfirmationModal() {
+            if (currentBooking.roomId) {
+                document.getElementById('modal-room-name').textContent = currentBooking.roomName;
+                document.getElementById('modal-date').textContent = formatDisplayDate(currentBooking.date);
+                document.getElementById('modal-time').textContent = currentBooking.timeSlot;
+                
+                confirmationModal.classList.remove('hidden');
+            }
+        }
+
+        // Cancel booking request
+        function cancelBookingRequest(bookingId) {
+            if (confirm('Are you sure you want to cancel this booking request?')) {
+                const booking = bookings.find(b => b.id === bookingId);
+                if (booking && booking.status === "pending") {
+                    booking.status = "cancelled";
+                    renderBookings();
+                    renderAdminBookings();
+                    updateAdminStats();
+                }
+            }
+        }
+
+        // Show admin action modal
+        function showAdminActionModal(bookingId, action, title, message) {
+            currentAdminAction.bookingId = bookingId;
+            currentAdminAction.action = action;
+            
+            document.getElementById('admin-action-title').textContent = title;
+            document.getElementById('admin-action-message').textContent = message;
+            
+            adminActionModal.classList.remove('hidden');
+        }
+
+        // Perform admin action
+        function performAdminAction() {
+            const { bookingId, action } = currentAdminAction;
+            
+            if (!bookingId || !action) return;
+            
+            const booking = bookings.find(b => b.id === bookingId);
+            if (!booking) return;
+            
+            if (action === 'approve') {
+                booking.status = "approved";
+            } else if (action === 'cancel') {
+                booking.status = "cancelled";
+            }
+            
+            // Update UI
+            renderBookings();
+            renderAdminBookings();
+            updateAdminStats();
+            renderRooms(); // Update room availability
+            
+            // Close modal
+            adminActionModal.classList.add('hidden');
+            currentAdminAction = { bookingId: null, action: null };
+        }
+
+        // Reset booking state
+        function resetBooking() {
+            currentBooking = {
+                roomId: null,
+                roomName: null,
+                date: null,
+                timeSlot: null,
+                price: 0
+            };
+            
+            // Reset UI
+            document.querySelectorAll('.time-slot').forEach(slot => {
+                slot.classList.remove('bg-primary', 'text-white');
+            });
+            
+            emptySummary.classList.remove('hidden');
+            bookingDetails.classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
